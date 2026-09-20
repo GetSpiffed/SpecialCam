@@ -28,7 +28,7 @@ $vpd = 350;
 
 // Type of model.  Select the rear-cover variant here; the ear positions are
 // therefore mutually exclusive and no separate position parameter is needed.
-TYPE = "back_top_bottom"; // [preview, front, back_sides, back_top_bottom, backmount, wallmount]
+TYPE = "front"; // [preview, front, back_sides, back_top_bottom, backmount, wallmount]
 
 //M3 hole
 M3_HOLE_DIA = 3.8;
@@ -61,10 +61,9 @@ BATTERY_CLEARANCE_Z = 0.4;
 // The battery rests directly on the inside of the rear wall.  The central
 // mounting screw is countersunk flush below it in back_cover().
 BATTERY_MOUNT_CLEARANCE = 0;
-// Battery-cable route.  Adjust CONNECTOR_Y if a different revision of the
-// board places the JST connector elsewhere.  +X is the right-hand PCB edge
-// when viewing the component side as in the reference photograph.
-BATTERY_CONNECTOR_SIDE = 1;
+// Battery-cable route.  -X mirrors the connector pocket and cable route to
+// the other side of the front cover; use +1 to restore the original side.
+BATTERY_CONNECTOR_SIDE = -1;
 BATTERY_CONNECTOR_Y = -8;
 JST_CONNECTOR_WIDTH = 5.5;
 JST_CONNECTOR_HEIGHT = 3.0;
@@ -99,7 +98,7 @@ LENS_BOTTOM_OFFSET = 29.0;
 LENS_Z = 10;
 
 // Diameter of PIR sensor cap
-PIR_DIA = 14.0+0.5;
+PIR_DIA = 15.0+0.5;
 // Distance of PIR sensor cap from PCB bottom
 PIR_BOTTOM_OFFSET = 14;
 // Z coordinate of PIR sensor cap base (lowest Z of removable cap)
@@ -121,7 +120,7 @@ USB_Y = 10;
 // Height of micro USB socket
 USB_X = 10;
 // Z coordinate of micro USB socket surface 
-USB_Z = 2.95 - PCB_Z;
+USB_Z = 3.95 - PCB_Z;
 // Distance of USB socket from PCB bottom
 USB_BOTTOM_OFFSET = -1.5;
 
