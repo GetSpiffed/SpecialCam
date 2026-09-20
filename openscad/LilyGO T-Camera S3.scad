@@ -7,7 +7,7 @@
 // Use thin soft pads / nonconductive retention; do not clamp the pouch.
 // Rear mount screw/nut must stay within the 3 mm reserved space.
 // Original USB opening retained. Check actual cable fit.
-// TYPE: preview, front, back, backmount, wallmount.
+// TYPE: preview, front, back_sides, back_top_bottom, backmount, wallmount.
 // Preview is an exploded view, not the assembled enclosure.
 // Geometry inspected numerically; OpenSCAD render / physical fit not tested.
 
@@ -26,8 +26,9 @@ $vpr = [75,0,250-90+r];
 $vpd = 350;
 */
 
-// Type of model 
-TYPE = "back"; // [preview, front, back, backmount, wallmount]
+// Type of model.  Select the rear-cover variant here; the ear positions are
+// therefore mutually exclusive and no separate position parameter is needed.
+TYPE = "back_top_bottom"; // [preview, front, back_sides, back_top_bottom, backmount, wallmount]
 
 //M3 hole
 M3_HOLE_DIA = 3.8;
@@ -105,7 +106,7 @@ PIR_BOTTOM_OFFSET = 14;
 PIR_BASE_Z = 5.0;
 
 // Width/height of buttons
-BUTTON_XY = 5.3+0.5;
+BUTTON_XY = 5.5+0.5;
 // Diameter of buttons rounded edges
 BUTTON_EDGE_DIA = 1.5;
 // Distance of buttons from PCB bottom (should be the aligned with the PIR sensor)
@@ -143,15 +144,15 @@ VELCRO_TAB_LENGTH = VELCRO_SLOT_LENGTH + 2*VELCRO_TAB_END_EDGE;
 // The ears are deeper than the rear wall for stiffness.  Their outer faces
 // remain flush with the rear face so the whole part rests on the print bed.
 VELCRO_TAB_THICKNESS = 4;
-// Rounded tab roots in the rear-wall plane.  Their centres are offset
-// outward, keeping the rounding inside the existing side-wall width.
-VELCRO_TAB_ROOT_RADIUS = 3;
 // Radius of the added-and-trimmed transition at every tab-to-case corner.
 // The blend is external: neither the original tab nor the case is cut away.
 VELCRO_TAB_CASE_BLEND_RADIUS = 3;
 // Radius of the continuous added-and-trimmed blend along the long case edge.
 VELCRO_TAB_LONG_BLEND_RADIUS = 3;
-
+// When the ears are on the top/bottom, their long dimension runs along X.
+// Keep it within the outside case width (including its walls).
+TOP_BOTTOM_TAB_LENGTH = min(VELCRO_TAB_LENGTH,
+                            CASE_X + 2*WALL_THICKNESS);
 // Z coordinate of front surface
 FRONT_Z = PIR_BASE_Z + FRONT_WALL_THICKNESS;
 
@@ -192,7 +193,12 @@ assert(BATTERY_RETAINER_RADIUS_X > BATTERY_RETAINING_TAB_OVERHANG);
 assert(VELCRO_SLOT_LENGTH > VELCRO_STRAP_MAX_WIDTH);
 assert(VELCRO_TAB_SIDE_EDGE >= WALL_THICKNESS);
 assert(VELCRO_TAB_THICKNESS >= WALL_THICKNESS);
-assert(VELCRO_TAB_ROOT_RADIUS/2 <= WALL_THICKNESS-WALL_CLEARANCE);
+assert(TYPE == "preview" || TYPE == "front" || TYPE == "back_sides" ||
+       TYPE == "back_top_bottom" || TYPE == "backmount" || TYPE == "wallmount",
+       "TYPE must be preview, front, back_sides, back_top_bottom, backmount or wallmount");
+assert(TYPE != "back_top_bottom" ||
+       TOP_BOTTOM_TAB_LENGTH >= VELCRO_SLOT_LENGTH + 2*VELCRO_TAB_END_EDGE,
+       "Case is too narrow for top/bottom Velcro ears and the selected strap slot");
 echo("Case width / length", CASE_X+2*WALL_THICKNESS, PCB_Y+2*WALL_THICKNESS);
 echo("Rear depth / screw length", BACK_Z, BACK_SCREW_LENGTH);
 
@@ -292,21 +298,22 @@ module rounded_slot(center_x, center_y, width_x, length_y, thickness_z,
   }
 }
 
-// The free perimeter and the two case-side corners of a tab are rounded.
-// The root circles overlap only the outer half of the case wall, replacing
-// right-angle shoulders without entering the battery compartment.
-module velcro_tab_outline(side, projection, length, corner_radius)
+// The free perimeter of a tab is rounded.  Its connection to the case is a
+// straight edge, without the former rounded shoulders at the tab root.
+module velcro_tab_outline(side, projection, length, corner_radius,
+                          case_half_width=CASE_X/2)
 {
-  case_edge_x = side * (CASE_X/2 + WALL_THICKNESS);
+  case_edge_x = side * (case_half_width + WALL_THICKNESS);
+  // Continue the tab into the case past its rounded outside edge.  This gives
+  // a complete connection at the lower/upper corners instead of stopping at
+  // the start of the case rounding.
+  attachment_x = case_edge_x - side*(COVER_SMOOTHER+0.1);
   outer_corner_x = case_edge_x + side * (projection-corner_radius);
-  root_radius = min(VELCRO_TAB_ROOT_RADIUS, corner_radius);
-  root_corner_x = case_edge_x + side * root_radius/2;
 
   hull() {
-    // These circles overlap the case at the upper and lower attachment
-    // points, producing rounded inside corners instead of sharp shoulders.
-    for (y = [-length/2+root_radius, length/2-root_radius]) {
-      translate([root_corner_x, y]) circle(r=root_radius);
+    // A straight case-side edge gives the ear a clean, direct connection.
+    for (y = [-length/2, length/2]) {
+      translate([attachment_x, y]) square([0.01, 0.01], center=true);
     }
 
     for (y = [-length/2+corner_radius, length/2-corner_radius]) {
@@ -366,47 +373,27 @@ module velcro_tab_long_case_cove(side, length, bottom_z, radius)
     rotate([90, 0, 0]) cylinder(h=length+2*cap_overlap, r=radius);
 }
 
-// Flatten the small case-side strip that meets a tab.  The cover remains
-// rounded everywhere else, but this strip gives the tab and its blend a
-// straight, predictable mating face.  It occupies only existing side-wall
-// material and cannot intrude into the battery compartment.
-module velcro_case_contact_pad(side, length)
-{
-  patch_width = WALL_THICKNESS-WALL_CLEARANCE;
-  patch_left_x = side < 0 ?
-                 -CASE_X/2-WALL_THICKNESS :
-                  CASE_X/2+WALL_CLEARANCE;
-  pad_bottom_z = BACK_Z-VELCRO_TAB_THICKNESS-VELCRO_TAB_LONG_BLEND_RADIUS;
-
-  translate([patch_left_x, -length/2, pad_bottom_z])
-    cube([patch_width,
-          length,
-          BACK_Z-pad_bottom_z]);
-}
-
 // Two side ears for a single Velcro strap.  They project sideways from the
 // rear wall while their outer faces remain flush with it.  No reinforcing
 // material extends inboard of the side wall, preserving battery clearance.
-module velcro_side_tabs()
+module velcro_side_tabs(tab_length=VELCRO_TAB_LENGTH, case_half_width=CASE_X/2)
 {
   tab_bottom_z = BACK_Z-VELCRO_TAB_THICKNESS;
   slot_bottom_z = tab_bottom_z-VELCRO_TAB_LONG_BLEND_RADIUS;
   slot_height = VELCRO_TAB_THICKNESS+VELCRO_TAB_LONG_BLEND_RADIUS;
-  tab_corner_radius = min(VELCRO_TAB_SIDE_EDGE, VELCRO_TAB_LENGTH/2);
+  tab_corner_radius = min(VELCRO_TAB_SIDE_EDGE, tab_length/2);
 
   for (side = [-1, 1]) {
     // Cut the strap slot from the completed ear itself.  Keeping the cut
     // local prevents any later union/hull operation from closing it again.
     difference() {
-      hull() {
-        translate([0, 0, tab_bottom_z]) linear_extrude(height=VELCRO_TAB_THICKNESS)
-          velcro_tab_outline(side,
-                             VELCRO_TAB_PROJECTION,
-                             VELCRO_TAB_LENGTH,
-                             tab_corner_radius);
-        velcro_case_contact_pad(side, VELCRO_TAB_LENGTH);
-      }
-      rounded_slot(side * (CASE_X/2 + WALL_THICKNESS +
+      translate([0, 0, tab_bottom_z]) linear_extrude(height=VELCRO_TAB_THICKNESS)
+        velcro_tab_outline(side,
+                           VELCRO_TAB_PROJECTION,
+                           tab_length,
+                           tab_corner_radius,
+                           case_half_width);
+      rounded_slot(side * (case_half_width + WALL_THICKNESS +
                            VELCRO_TAB_PROJECTION/2),
                    0,
                    VELCRO_SLOT_WIDTH,
@@ -414,6 +401,35 @@ module velcro_side_tabs()
                    slot_height,
                    slot_bottom_z);
     }
+  }
+}
+
+// The top/bottom ears reuse the proven side-ear geometry after a 90 degree
+// rotation.  Their length is capped to the case's outside width above.
+module velcro_top_bottom_tabs()
+{
+  rotate([0, 0, 90]) velcro_side_tabs(TOP_BOTTOM_TAB_LENGTH, PCB_Y/2);
+}
+
+module velcro_side_tab_slots(case_half_width=CASE_X/2)
+{
+  T = WALL_THICKNESS;
+  for (side = [-1, 1]) {
+    rounded_slot(side * (case_half_width + T + VELCRO_TAB_PROJECTION/2),
+                 0,
+                 VELCRO_SLOT_WIDTH,
+                 VELCRO_SLOT_LENGTH,
+                 VELCRO_TAB_THICKNESS,
+                 BACK_Z-VELCRO_TAB_THICKNESS);
+  }
+}
+
+module velcro_tab_slots()
+{
+  if (TYPE == "back_sides") {
+    velcro_side_tab_slots();
+  } else {
+    rotate([0, 0, 90]) velcro_side_tab_slots(PCB_Y/2);
   }
 }
 
@@ -689,15 +705,12 @@ module back_cover()
        cylinder(h=4*z, d=M3_HOLE_DIA, center=true);
         
       }
-      // Locally remove the cover-edge rounding where each tab and its blend
-      // meet the case, while preserving the rounded case outside this strip.
-      for (side = [-1, 1]) {
-        velcro_case_contact_pad(side,
-                                VELCRO_TAB_LENGTH+
-                                2*VELCRO_TAB_CASE_BLEND_RADIUS);
+      // Rear-flush, integral ears for a 25 mm Velcro strap.
+      if (TYPE == "back_sides") {
+        velcro_side_tabs();
+      } else {
+        velcro_top_bottom_tabs();
       }
-      // Rear-flush, integral side ears for a 25 mm Velcro strap.
-      velcro_side_tabs();
       // Four elliptical retaining ribs grow smoothly out of the side walls.
       // Only their rounded inner tips overlap the battery corners by 0.8 mm;
       // the 0.4 mm gap below each rib keeps the pouch loose rather than
@@ -757,14 +770,7 @@ module back_cover()
 
     // The slots run through the thicker ears.  Their outer faces remain in
     // the rear-wall print plane, so no support or bridge is required.
-    for (side = [-1, 1]) {
-      rounded_slot(side * (CASE_X/2 + T + VELCRO_TAB_PROJECTION/2),
-                   0,
-                   VELCRO_SLOT_WIDTH,
-                   VELCRO_SLOT_LENGTH,
-                   VELCRO_TAB_THICKNESS,
-                   BACK_Z-VELCRO_TAB_THICKNESS);
-    }
+    velcro_tab_slots();
   }
  
     
@@ -833,7 +839,7 @@ if ("preview" == TYPE) {
     front_cover();
     overlap();    
   }
-} else if ("back" == TYPE) {
+} else if ("back_sides" == TYPE || "back_top_bottom" == TYPE) {
   back_cover();
 
 } else if ("backmount" == TYPE) {
