@@ -28,7 +28,7 @@ $vpd = 350;
 
 // Type of model.  Select the rear-cover variant here; the ear positions are
 // therefore mutually exclusive and no separate position parameter is needed.
-TYPE = "front"; // [preview, front, back_sides, back_top_bottom, backmount, wallmount]
+TYPE = "back_top_bottom"; // [preview, front, back_sides, back_top_bottom, backmount, wallmount]
 
 //M3 hole
 M3_HOLE_DIA = 3.8;
@@ -697,9 +697,9 @@ module back_cover()
         
         for (x = [x_off, -x_off], y = [y_off, -y_off]) {
           translate([x,y,z/2+FIX_CLEAR]) {
-            cylinder(h=4*z, d=M3_HOLE_DIA, center=true);          
+            cylinder(h=4*z, d=M3_HOLE_DIA, center=true);
           }
-        } 
+        }
        //center hole to attach the ball mount later
        cylinder(h=4*z, d=M3_HOLE_DIA, center=true);
         
@@ -756,9 +756,7 @@ module back_cover()
     
     for (x = [x_off, -x_off], y = [y_off, -y_off]) {
       translate([x,y,BACK_Z-BACK_SCREW_HEAD_DIA/2+0.01]) {
-
-       cylinder(h=BACK_SCREW_HEAD_DIA/2,d1=0,d2=BACK_SCREW_HEAD_DIA);
-        
+        cylinder(h=BACK_SCREW_HEAD_DIA/2,d1=0,d2=BACK_SCREW_HEAD_DIA);
       }
     }
     // Flush countersink for the centre back-mount screw.  This keeps metal

@@ -58,11 +58,13 @@ Dit moet 192.168.4.1 opleveren. Controleer daarna ook nslookup specialcam.nl zon
 
 ## Foto opslaan en webinterface
 
-De mobiele webpagina zet het camerabeeld centraal, met knoppen voor Foto opslaan en Opnieuw verbinden. Verbindings- en voedingsstatus staan in aparte blokken; technische gegevens zijn uitklapbaar en uitschakelen staat apart onderaan.
+De mobiele webpagina zet het camerabeeld centraal, met knoppen voor Foto opslaan, Opnieuw verbinden en Beeld draaien. Verbindings- en voedingsstatus staan in aparte blokken; technische gegevens zijn uitklapbaar en uitschakelen staat apart onderaan.
 
 Kies **Foto opslaan** om een JPEG op te halen en te downloaden als SpecialCam-[datum-tijd].jpg. Het is een cameraframe op de ingestelde resolutie (640x480), geen screenshot van de webpagina. Het frame kan iets verschillen van wat de vertraagde browserstream op dat moment toont. Als downloaden op je telefoon anders wordt afgehandeld, kies **Open foto** en gebruik de bewaar-/deelfunctie van je browser.
 
 Direct foto-endpoint: http://192.168.4.1/capture. De camera blijft streamen; een foto kan kort capaciteit delen met de stream. Foto's worden niet op het board bewaard. Er zijn geen externe scripts, lettertypen of diensten nodig.
+
+**Beeld draaien** draait bij elke druk alleen het voorbeeld in de browser 90 graden met de klok mee. De camera-instellingen en opgeslagen foto's veranderen niet; een gedraaide weergave staat dus niet in het JPEG-bestand. De gekozen stand wordt lokaal in die browser bewaard en geldt niet automatisch op een ander apparaat of in een andere browser.
 
 ## Aan/uit en energiebediening
 
