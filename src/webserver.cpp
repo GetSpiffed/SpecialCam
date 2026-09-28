@@ -25,6 +25,12 @@ esp_err_t indexHandler(httpd_req_t *req) {
     return httpd_resp_send(req, WEB_PAGE, HTTPD_RESP_USE_STRLEN);
 }
 
+esp_err_t faviconHandler(httpd_req_t *req) {
+    httpd_resp_set_type(req, "image/svg+xml");
+    httpd_resp_set_hdr(req, "Cache-Control", "public, max-age=86400");
+    return httpd_resp_send(req, FAVICON_SVG, HTTPD_RESP_USE_STRLEN);
+}
+
 esp_err_t statusHandler(httpd_req_t *req) {
     char json[400];
     const PowerStatus power = getPowerStatus();
@@ -158,7 +164,8 @@ bool startWebServer(bool ready) {
         Serial.printf("[web] ERROR startup: %s\n", esp_err_to_name(err));
         return false;
     }
-    if (!addHandler(webServer, "/", indexHandler) || !addHandler(webServer, "/status", statusHandler) ||
+    if (!addHandler(webServer, "/", indexHandler) || !addHandler(webServer, "/favicon.svg", faviconHandler) ||
+        !addHandler(webServer, "/status", statusHandler) ||
         !addHandler(webServer, "/stream", redirectHandler) ||
         !addHandler(webServer, "/shutdown", shutdownHandler, HTTP_POST) ||
         !addHandler(webServer, "/capture", captureHandler)) return false;

@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const html = fs.readFileSync('include/web_page.h','utf8');
 const source = html.split('<script>')[1].split('</script>')[0];
+assert.match(html, /rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"/);
 assert.match(html, /id="capture"[^>]*href="\/capture"[^>]*download="SpecialCam\.jpg"/);
 async function fixture({confirmed=true,shutdownOK=true,offline=false}={}) {
   const elements=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],{
