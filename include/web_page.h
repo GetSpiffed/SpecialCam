@@ -12,7 +12,7 @@ const char WEB_PAGE[] PROGMEM = R"HTML(<!doctype html>
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,sans-serif}
 button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer}a{color:var(--green);text-underline-offset:4px}
 button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--green);outline-offset:4px}
-button:disabled{opacity:.45;cursor:default}svg{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+button:disabled,.action-button[aria-disabled=true]{opacity:.45;cursor:default;pointer-events:none}svg{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .shell{width:min(100%,864px);margin:auto;padding:24px 24px 28px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px}
 .brand{display:flex;align-items:center;gap:11px}.mark{width:42px;height:42px;border:1px solid #53704d;border-radius:14px;display:grid;place-items:center;color:var(--green);background:#233225}.mark svg{width:25px;height:25px}
@@ -30,7 +30,7 @@ h2{font-size:15px;font-weight:600;margin:0}.badge{display:inline-flex;gap:7px;al
 .viewer[data-rotation="270"] #camera{width:133.333%;transform:translate(-50%,-50%) rotate(270deg)}
 .viewer-label{position:absolute;bottom:13px;left:14px;border:1px solid #ffffff24;border-radius:6px;padding:4px 8px;background:#0a130dcc;color:#dfebdf;font-size:10px;letter-spacing:.08em;pointer-events:none}
 .status-line{font-size:12px;color:var(--muted);margin:10px 2px 16px;min-height:18px}
-.actions{display:flex;flex-wrap:wrap;gap:10px}.actions button{min-height:49px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 18px;font-weight:650}
+.actions{display:flex;flex-wrap:wrap;gap:10px}.actions button,.actions .action-button{min-height:49px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 18px;font-weight:650;text-decoration:none}
 .primary{flex:1;background:var(--green);color:#162210;border:1px solid var(--green)}.secondary{background:var(--panel);border:1px solid var(--line);color:var(--text)}
 .action-note{font-size:12px;color:var(--muted);margin:10px 2px 0;min-height:20px}.action-note a{margin-left:8px}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0 18px}
@@ -43,7 +43,7 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;ma
 footer p{font-size:11px;color:var(--muted);margin:0}.power-button{display:flex;align-items:center;gap:7px;background:none;border:1px solid #65483f;border-radius:10px;min-height:44px;padding:9px 13px;color:var(--danger);font-size:12px;white-space:nowrap}
 .power-button svg{width:16px;height:16px}
 @media(min-width:700px){.shell{padding-top:32px}.actions .primary{flex:0 1 240px}header{margin-bottom:32px}.metrics{margin-top:24px}}
-@media(max-width:420px){.shell{padding:18px 16px 24px}header{margin-bottom:23px}.local{font-size:9px}.actions button{padding:12px;font-size:13px}.metric{padding:14px 12px}.metric strong{font-size:16px}.metric small{font-size:11px}footer{gap:10px}footer p{max-width:145px}}
+@media(max-width:420px){.shell{padding:18px 16px 24px}header{margin-bottom:23px}.local{font-size:9px}.actions button,.actions .action-button{padding:12px;font-size:13px}.metric{padding:14px 12px}.metric strong{font-size:16px}.metric small{font-size:11px}footer{gap:10px}footer p{max-width:145px}}
 @media(prefers-reduced-motion:no-preference){button{transition:background .15s,opacity .15s}.primary:hover:not(:disabled){background:#d3f1b0}}
 [hidden]{display:none!important}
 </style>
@@ -59,11 +59,11 @@ footer p{font-size:11px;color:var(--muted);margin:0}.power-button{display:flex;a
  <div id="viewer" class="viewer"><img id="camera" alt="Camerabeeld uit de trailer"><span class="viewer-label">TRAILERCAMERA · 640 × 480</span></div>
  <p id="status" class="status-line" role="status">Verbinding met de camera maken…</p>
  <div class="actions">
-  <button id="capture" class="primary" disabled><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h4l2-3h4l2 3h4v14H4z"/><circle cx="12" cy="12.5" r="3.5"/></svg><span id="capture-label">Foto opslaan</span></button>
+  <a id="capture" class="primary action-button" href="/capture" download="SpecialCam.jpg" aria-disabled="true"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h4l2-3h4l2 3h4v14H4z"/><circle cx="12" cy="12.5" r="3.5"/></svg><span id="capture-label">Foto opslaan</span></a>
   <button id="restart" class="secondary"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 10a8 8 0 1 0-2 8M20 4v6h-6"/></svg>Opnieuw verbinden</button>
   <button id="rotate" class="secondary" aria-label="Draai beeld 90 graden met de klok mee"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 10a8 8 0 1 0-2 8M20 4v6h-6"/><path d="M12 7v5l3 2"/></svg>Beeld draaien</button>
  </div>
- <p class="action-note" aria-live="polite"><span id="photo-status">Bewaar een camerabeeld op je telefoon.</span><a id="photo-open" hidden target="_blank" rel="noopener">Open foto</a></p>
+ <p class="action-note" aria-live="polite"><span id="photo-status">Bewaar een camerabeeld op je telefoon.</span></p>
 </section>
 <section class="metrics" aria-label="Apparaatstatus">
  <div class="metric"><div class="metric-label"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0M8 16a6 6 0 0 1 8 0M12 20h.01"/></svg>Verbinding</div><strong id="connection">SpecialCam</strong><small id="clients">Status ophalen…</small></div>
@@ -75,7 +75,7 @@ footer p{font-size:11px;color:var(--muted);margin:0}.power-button{display:flex;a
 <script>
 const el=id=>document.getElementById(id);
 const camera=el('camera'), viewer=el('viewer'), status=el('status');
-let shuttingDown=false, cameraReady=false, capturing=false, photoUrl=null, rotation=0;
+let shuttingDown=false, cameraReady=false, rotation=0;
 try{rotation=Number(localStorage.getItem('specialcam-rotation'))||0;}catch{}
 function applyRotation(){
   viewer.dataset.rotation=rotation;
@@ -83,7 +83,7 @@ function applyRotation(){
 }
 applyRotation();
 function badge(text,state){el('badge').textContent=text;el('badge').dataset.state=state;}
-function syncCapture(){el('capture').disabled=shuttingDown || capturing || !cameraReady;}
+function syncCapture(){el('capture').setAttribute('aria-disabled',String(shuttingDown || !cameraReady));}
 function start(){
   if(shuttingDown)return;
   badge('Verbinden','waiting');
@@ -101,31 +101,9 @@ el('rotate').onclick=()=>{
   applyRotation();
   try{localStorage.setItem('specialcam-rotation',String(rotation));}catch{}
 };
-el('capture').onclick=async()=>{
-  if(shuttingDown || capturing || !cameraReady)return;
-  capturing=true;syncCapture();el('capture-label').textContent='Foto maken…';
-  el('photo-open').hidden=true;
-  el('photo-status').textContent='Een camerabeeld ophalen…';
-  const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),10000);
-  try{
-    const response=await fetch('/capture',{cache:'no-store',signal:controller.signal});
-    if(!response.ok)throw Error();
-    const blob=await response.blob();
-    if(!blob.size || !blob.type.startsWith('image/jpeg'))throw Error();
-    if(shuttingDown)return;
-    if(photoUrl)URL.revokeObjectURL(photoUrl);
-    photoUrl=URL.createObjectURL(blob);
-    const download=document.createElement('a');
-    download.href=photoUrl;
-    download.download='SpecialCam-'+new Date().toISOString().replace(/[:.]/g,'-')+'.jpg';
-    document.body.appendChild(download);download.click();download.remove();
-    el('photo-open').href=photoUrl;el('photo-open').hidden=false;
-    el('photo-status').textContent='Download gestart. Lukt opslaan niet?';
-  }catch{
-    if(!shuttingDown)el('photo-status').textContent='Foto niet opgehaald. Probeer opnieuw.';
-  }finally{
-    clearTimeout(timer);capturing=false;syncCapture();el('capture-label').textContent='Foto opslaan';
-  }
+el('capture').onclick=event=>{
+  if(shuttingDown || !cameraReady){event.preventDefault();return;}
+  el('photo-status').textContent='Foto wordt naar je downloads gestuurd.';
 };
 function showShutdown(){
   shuttingDown=true;syncCapture();

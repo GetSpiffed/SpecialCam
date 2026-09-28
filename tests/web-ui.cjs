@@ -3,22 +3,21 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const html = fs.readFileSync('include/web_page.h','utf8');
 const source = html.split('<script>')[1].split('</script>')[0];
-async function fixture({confirmed=true,shutdownOK=true,captureOK=true,offline=false}={}) {
+assert.match(html, /id="capture"[^>]*href="\/capture"[^>]*download="SpecialCam\.jpg"/);
+async function fixture({confirmed=true,shutdownOK=true,offline=false}={}) {
   const elements=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],{
-    textContent:'',disabled:false,hidden:true,dataset:{},removeAttribute(k){delete this[k];}
+    textContent:'',disabled:false,hidden:true,dataset:{},setAttribute(k,v){this[k]=v;},removeAttribute(k){delete this[k];}
   }]));
-  const calls=[],downloads=[];
+  const calls=[];
   const context=vm.createContext({
-    document:{getElementById:id=>elements[id],body:{appendChild(){}},
-      createElement:()=>({click(){downloads.push(this.download);},remove(){}})},
-    confirm:()=>confirmed, AbortController, Date,
-    URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},
+    document:{getElementById:id=>elements[id]},
+    confirm:()=>confirmed, AbortController,
     setTimeout:()=>1,clearTimeout:()=>{},
     fetch:async(url,options)=>{
       calls.push({url,options});
       if(url==='/status' && offline)throw Error('Offline');
-      return {ok:url==='/shutdown'?shutdownOK:url==='/capture'?captureOK:true,
-        blob:async()=>({type:'image/jpeg',size:1024}),json:async()=>({
+      return {ok:url==='/shutdown'?shutdownOK:true,
+        json:async()=>({
           camera_ready:true,streaming:true,frame_age_ms:100,clients:1,
           ip:'192.168.4.1',power_ready:true,usb:true,battery:true,
           charging:true,battery_mv:3980,shutting_down:false
@@ -27,7 +26,7 @@ async function fixture({confirmed=true,shutdownOK=true,captureOK=true,offline=fa
   });
   vm.runInContext(source,context);
   await new Promise(setImmediate);
-  return {elements,calls,downloads};
+  return {elements,calls};
 }
 (async()=>{
   for(const confirmed of [false,true]){
@@ -39,7 +38,7 @@ async function fixture({confirmed=true,shutdownOK=true,captureOK=true,offline=fa
     if(confirmed){
       assert.equal(calls[0].options.method,'POST');
       assert.equal(calls[0].options.headers['X-SpecialCam-Confirm'],'yes');
-      assert.equal(f.elements.capture.disabled,true);
+      assert.equal(f.elements.capture['aria-disabled'],'true');
       assert.match(f.elements.status.textContent,/schakelt uit/);
     }
   }
@@ -48,19 +47,13 @@ async function fixture({confirmed=true,shutdownOK=true,captureOK=true,offline=fa
   assert.equal(f.elements.shutdown.disabled,false);
   assert.match(f.elements.status.textContent,/niet bevestigd/);
   f=await fixture();
-  await f.elements.capture.onclick();
-  assert.equal(f.downloads.length,1);
-  assert.match(f.downloads[0],/^SpecialCam-.*.jpg$/);
-  assert.equal(f.elements['photo-open'].hidden,false);
-  assert.equal(f.elements.capture.disabled,false);
-  f=await fixture({captureOK:false});
-  await f.elements.capture.onclick();
-  assert.equal(f.downloads.length,0);
-  assert.match(f.elements['photo-status'].textContent,/niet opgehaald/);
-  assert.equal(f.elements.capture.disabled,false);
+  f.elements.capture.onclick({currentTarget:f.elements.capture,preventDefault(){throw Error('unexpected preventDefault');}});
+  assert.equal(f.calls.filter(c=>c.url==='/capture').length,0);
+  assert.match(f.elements['photo-status'].textContent,/downloads/);
+  assert.equal(f.elements.capture['aria-disabled'],'false');
   f=await fixture({offline:true});
-  assert.equal(f.elements.capture.disabled,true);
-  await f.elements.capture.onclick();
-  assert.equal(f.downloads.length,0);
-  console.log('PASS: shutdown cancel/confirm/failure; JPEG download/failure; offline; battery');
+  let prevented=false;
+  f.elements.capture.onclick({currentTarget:f.elements.capture,preventDefault(){prevented=true;}});
+  assert.equal(prevented,true);
+  console.log('PASS: shutdown cancel/confirm/failure; native JPEG download; offline; battery');
 })().catch(e=>{console.error(e);process.exitCode=1;});

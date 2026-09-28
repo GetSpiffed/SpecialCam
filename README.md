@@ -60,7 +60,7 @@ Dit moet 192.168.4.1 opleveren. Controleer daarna ook nslookup specialcam.nl zon
 
 De mobiele webpagina zet het camerabeeld centraal, met knoppen voor Foto opslaan, Opnieuw verbinden en Beeld draaien. Verbindings- en voedingsstatus staan in aparte blokken; technische gegevens zijn uitklapbaar en uitschakelen staat apart onderaan.
 
-Kies **Foto opslaan** om een JPEG op te halen en te downloaden als SpecialCam-[datum-tijd].jpg. Het is een cameraframe op de ingestelde resolutie (640x480), geen screenshot van de webpagina. Het frame kan iets verschillen van wat de vertraagde browserstream op dat moment toont. Als downloaden op je telefoon anders wordt afgehandeld, kies **Open foto** en gebruik de bewaar-/deelfunctie van je browser.
+Kies **Foto opslaan** om een JPEG rechtstreeks aan de downloadfunctie van de browser door te geven. Er is geen vertraagde JavaScript/Blob-download die Android als een los apparaatkeuzeverzoek kan afwijzen. De foto wordt aangeboden als `SpecialCam.jpg`. Het is een cameraframe op de ingestelde resolutie (640x480), geen screenshot van de webpagina. Het frame kan iets verschillen van wat de vertraagde browserstream op dat moment toont.
 
 Direct foto-endpoint: http://192.168.4.1/capture. De camera blijft streamen; een foto kan kort capaciteit delen met de stream. Foto's worden niet op het board bewaard. Er zijn geen externe scripts, lettertypen of diensten nodig.
 
