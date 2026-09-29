@@ -2,8 +2,10 @@
 #include <Arduino.h>
 const char FAVICON_SVG[] PROGMEM = R"SVG(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <rect width="64" height="64" rx="16" fill="#192720"/>
-<path d="M14 52V25L25 11l8 6 12-6 5 19-14 8v14M25 11V6m20 5 5-5M14 27l22 11M28 52h17" fill="none" stroke="#c3e697" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="36" cy="23" r="2.5" fill="#c3e697"/>
+<path d="M18 10v22c0 14 6 21 14 21s14-7 14-21V10" fill="none" stroke="#c3e697" stroke-width="10"/>
+<g fill="#192720"><circle cx="18" cy="18" r="2"/><circle cx="46" cy="18" r="2"/><circle cx="18" cy="29" r="2"/><circle cx="46" cy="29" r="2"/></g>
+<circle cx="32" cy="29" r="7" fill="#192720" stroke="#c3e697" stroke-width="3"/>
+<circle cx="34" cy="27" r="2" fill="#eff4ec"/>
 </svg>)SVG";
 const char WEB_PAGE[] PROGMEM = R"HTML(<!doctype html>
 <html lang="nl">
